@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zombie Survival HQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #12110f;
+      --panel: #1c1a17;
+      --panel-2: #26231e;
+      --line: #3a352c;
+      --text: #e8e2d4;
+      --muted: #9a917f;
+      --blood: #c0392b;
+      --blood-dark: #7e1f16;
+      --toxic: #8bc34a;
+      --warn: #e0a526;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      background-image: radial-gradient(circle at 20% 0%, #2a1512 0%, transparent 45%),
+                        radial-gradient(circle at 100% 100%, #16200f 0%, transparent 40%);
+      color: var(--text);
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    header {
+      padding: 20px 16px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 {
+      font-family: "Oswald", Impact, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: clamp(28px, 6vw, 44px);
+      margin: 0;
+      color: var(--text);
+    }
+    h1 span { color: var(--blood); }
+    .tagline { font-family: "Special Elite", serif; color: var(--muted); margin: 4px 0 0; }
+    main { max-width: 980px; margin: 0 auto; padding: 16px; }
+    h2, h3 { font-family: "Oswald", Impact, sans-serif; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 10px; }
+    h2 { font-size: 20px; }
+    h3 { font-size: 16px; color: var(--muted); }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .hidden { display: none !important; }
+    button {
+      font: inherit;
+      font-family: "Oswald", Impact, sans-serif;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover:not(:disabled) { border-color: var(--blood); background: #2f1f1b; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.primary { background: var(--blood-dark); border-color: var(--blood); }
+    button.primary:hover:not(:disabled) { background: var(--blood); }
+    input[type="text"] {
+      font: inherit;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      width: 100%;
+      max-width: 320px;
+    }
+    label { display: block; margin: 12px 0 6px; color: var(--muted); }
+    .skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .skill {
+      text-align: left;
+      text-transform: none;
+      font-family: "IBM Plex Mono", monospace;
+      letter-spacing: 0;
+    }
+    .skill strong { font-family: "Oswald", sans-serif; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
+    .skill.selected { border-color: var(--blood); background: #2f1f1b; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px;
+    }
+    .stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
+    .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    .stat .value { font-family: "Oswald", sans-serif; font-size: 22px; }
+    .bar { height: 6px; background: var(--bg); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+    .bar > div { height: 100%; background: var(--toxic); transition: width 0.3s; }
+    .bar > div.low { background: var(--blood); }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .tabs button.active { border-color: var(--blood); background: #2f1f1b; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+    .card { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+    .card p { margin: 6px 0; color: var(--muted); font-size: 13px; }
+    .card button { width: 100%; margin-top: 8px; }
+    .danger { font-size: 12px; text-transform: uppercase; font-weight: 600; }
+    .danger.low { color: var(--toxic); }
+    .danger.medium { color: var(--warn); }
+    .danger.high { color: var(--blood); }
+    .event { border-left: 3px solid var(--blood); }
+    .event p { font-family: "Special Elite", serif; font-size: 17px; color: var(--text); }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .log { max-height: 220px; overflow-y: auto; font-size: 13px; }
+    .log div { padding: 4px 0; border-bottom: 1px dashed var(--line); color: var(--muted); }
+    .log div:first-child { color: var(--text); }
+    .locked { opacity: 0.45; }
+    table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
+    table tbody { display: table; width: 100%; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 400; font-size: 12px; text-transform: uppercase; }
+    .done { color: var(--toxic); }
+    .center { text-align: center; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px 16px 30px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Zombie <span>Survival</span> HQ</h1>
+    <p class="tagline">Survive the apocalypse. Rebuild civilization.</p>
+  </header>
+
+  <main>
+    <!-- START SCREEN -->
+    <section id="start" class="panel">
+      <h2>New Survivor</h2>
+      <p>The outbreak spread faster than anyone expected. Survive <strong>10 days</strong> to reach the rebuilding camp and help rebuild civilization.</p>
+      <label for="name">Survivor name</label>
+      <input type="text" id="name" maxlength="20" placeholder="Enter a name" />
+      <label>Starting skill</label>
+      <div class="skills">
+        <button class="skill" data-skill="Medic"><strong>🩹 Medic</strong>Medicine heals twice as much.</button>
+        <button class="skill" data-skill="Scavenger"><strong>🔍 Scavenger</strong>Find 50% more supplies.</button>
+        <button class="skill" data-skill="Fighter"><strong>🪓 Fighter</strong>Win fights more often.</button>
+      </div>
+      <p style="margin-top:16px"><button class="primary" id="startBtn" disabled>Start surviving</button></p>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="game" class="hidden">
+      <div class="panel">
+        <h2 id="survivorTitle"></h2>
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <div id="eventPanel" class="panel event hidden">
+        <h3 id="eventTitle"></h3>
+        <p id="eventText"></p>
+        <div class="choices" id="eventChoices"></div>
+      </div>
+
+      <div class="panel" id="actionsPanel">
+        <div class="tabs" id="tabs">
+          <button data-tab="map" class="active">🗺️ Map</button>
+          <button data-tab="inventory">🎒 Inventory</button>
+          <button data-tab="crafting">🔨 Crafting</button>
+          <button data-tab="missions">🎯 Missions</button>
+          <button data-tab="database">🧟 Zombie Database</button>
+          <button data-tab="multiplayer">🤝 Multiplayer</button>
+        </div>
+        <div id="tabContent"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Survival log</h3>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+
+    <!-- GAME OVER -->
+    <section id="over" class="panel center hidden">
+      <h2 id="overTitle"></h2>
+      <p id="overText"></p>
+      <p><button class="primary" id="againBtn">Play again</button></p>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section class="panel">
+      <h2>🏆 Leaderboard</h2>
+      <div id="leaderboard"></div>
+    </section>
+  </main>
+
+  <footer>Copyright © 2026 Zombie Survival HQ · Released under the MIT License</footer>
+
+  <script>
+    // ---------- Game data ----------
+    const GOAL_DAYS = 10;
+
+    const TERRITORIES = [
+      { id: "mall", name: "Abandoned Mall", danger: "low", encounter: 0.35,
+        loot: { food: [1, 3], water: [1, 2], materials: [0, 2] }, zombies: ["walker", "crawler"],
+        mission: "Rescue the survivors hiding in the food court" },
+      { id: "hospital", name: "City Hospital", danger: "medium", encounter: 0.55,
+        loot: { medicine: [1, 2], water: [0, 2], materials: [0, 1] }, zombies: ["walker", "runner", "screamer"],
+        mission: "Recover the medical supplies from the pharmacy" },
+      { id: "downtown", name: "Downtown Ruins", danger: "medium", encounter: 0.6,
+        loot: { materials: [2, 4], food: [0, 2], ammo: [0, 2] }, zombies: ["runner", "screamer", "brute"],
+        mission: "Light the signal fire on the radio tower" },
+      { id: "base", name: "Military Base", danger: "high", encounter: 0.8,
+        loot: { ammo: [3, 6], materials: [1, 3], medicine: [0, 1] }, zombies: ["runner", "brute"],
+        mission: "Secure the armoury before the horde arrives" },
+    ];
+
+    const ZOMBIES = {
+      walker:   { name: "Walker",   strength: 0.25, damage: [5, 12],  desc: "Slow and clumsy, but dangerous in groups.", weakness: "Easy to outrun. Sneaking past usually works." },
+      crawler:  { name: "Crawler",  strength: 0.2,  damage: [4, 10],  desc: "Hides under debris and grabs at ankles.", weakness: "Weak in a fight. Watch where you step." },
+      runner:   { name: "Runner",   strength: 0.45, damage: [10, 18], desc: "Fast and relentless. You can't outrun it.", weakness: "Fight it with ammo. Running rarely works." },
+      screamer: { name: "Screamer", strength: 0.35, damage: [6, 14],  desc: "Its shriek attracts every zombie nearby.", weakness: "Take it down quickly before it calls others." },
+      brute:    { name: "Brute",    strength: 0.65, damage: [15, 28], desc: "Huge, armoured and hard to stop.", weakness: "Run unless you are a Fighter with ammo to spare." },
+    };
+
+    const RECIPES = [
+      { id: "medkit",    name: "Medkit",    cost: 3, gives: "medicine", amount: 1, desc: "Bandages and scavenged pills. +1 medicine." },
+      { id: "barricade", name: "Barricade", cost: 4, gives: "barricades", amount: 1, desc: "Reinforce your shelter. Lowers the chance of night attacks." },
+      { id: "ammo",      name: "Ammo pack", cost: 2, gives: "ammo", amount: 3, desc: "Hand-packed rounds. +3 ammo." },
+    ];
+
+    // ---------- State ----------
+    let state = null;
+    let chosenSkill = null;
+    let activeTab = "map";
+
+    const $ = (id) => document.getElementById(id);
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    function newState(name, skill) {
+      return {
+        name, skill, day: 1, health: 100,
+        food: 3, water: 3, medicine: 1, ammo: 4, materials: 2, barricades: 0,
+        xp: 0, missions: [], seen: [], busy: false,
+      };
+    }
+
+    // ---------- Start screen ----------
+    document.querySelectorAll(".skill").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".skill").forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        chosenSkill = btn.dataset.skill;
+        checkStart();
+      });
+    });
+    $("name").addEventListener("input", checkStart);
+    function checkStart() { $("startBtn").disabled = !($("name").value.trim() && chosenSkill); }
+
+    $("startBtn").addEventListener("click", () => {
+      state = newState($("name").value.trim(), chosenSkill);
+      $("start").classList.add("hidden");
+      $("over").classList.add("hidden");
+      $("game").classList.remove("hidden");
+      $("log").innerHTML = "";
+      log(`Day 1. ${state.name} the ${state.skill} wakes up in a boarded-up shelter. Survive ${GOAL_DAYS} days.`);
+      activeTab = "map";
+      render();
+    });
+
+    $("againBtn").addEventListener("click", () => {
+      $("over").classList.add("hidden");
+      $("start").classList.remove("hidden");
+      $("name").value = "";
+      chosenSkill = null;
+      document.querySelectorAll(".skill").forEach((b) => b.classList.remove("selected"));
+      checkStart();
+    });
+
+    // ---------- Tabs ----------
+    $("tabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      activeTab = btn.dataset.tab;
+      render();
+    });
+
+    // ---------- Rendering ----------
+    function render() {
+      $("survivorTitle").textContent = `${state.name} · ${state.skill} · Day ${state.day} of ${GOAL_DAYS}`;
+      const hpClass = state.health <= 30 ? "low" : "";
+      $("stats").innerHTML = `
+        <div class="stat"><div class="label">❤️ Health</div><div class="value">${state.health}</div>
+          <div class="bar"><div class="${hpClass}" style="width:${state.health}%"></div></div></div>
+        ${stat("🥫 Food", state.food)}${stat("💧 Water", state.water)}${stat("🩹 Medicine", state.medicine)}
+        ${stat("🔫 Ammo", state.ammo)}${stat("🔩 Materials", state.materials)}${stat("🧱 Barricades", state.barricades)}
+        ${stat("⭐ XP", state.xp)}`;
+
+      document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === activeTab));
+      $("actionsPanel").classList.toggle("hidden", state.busy);
+
+      const c = $("tabContent");
+      if (activeTab === "map") c.innerHTML = renderMap();
+      if (activeTab === "inventory") c.innerHTML = renderInventory();
+      if (activeTab === "crafting") c.innerHTML = renderCrafting();
+      if (activeTab === "missions") c.innerHTML = renderMissions();
+      if (activeTab === "database") c.innerHTML = renderDatabase();
+      if (activeTab === "multiplayer") c.innerHTML = `<p>🤝 Multiplayer challenges are coming soon. Team up with other survivors in a future update!</p>`;
+      bindTabButtons();
+    }
+
+    const stat = (label, value) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div></div>`;
+
+    function renderMap() {
+      return `<p>Choose where to spend the day. Each trip uses up the day.</p><div class="grid">${TERRITORIES.map((t) => `
+        <div class="card">
+          <h3 style="color:var(--text)">${t.name}</h3>
+          <div class="danger ${t.danger}">${t.danger} danger</div>
+          <p>Known threats: ${t.zombies.map((z) => state.seen.includes(z) ? ZOMBIES[z].name : "???").join(", ")}</p>
+          <p>Supplies: ${Object.keys(t.loot).join(", ")}</p>
+          <button data-explore="${t.id}">Explore</button>
+        </div>`).join("")}
+        <div class="card">
+          <h3 style="color:var(--text)">Your Shelter</h3>
+          <div class="danger low">safe</div>
+          <p>Rest for the day and recover 20 health.</p>
+          <button data-rest="1">Rest</button>
+        </div></div>`;
+    }
+
+    function renderInventory() {
+      const heal = state.skill === "Medic" ? 50 : 25;
+      return `<p>Each night you eat 1 food and drink 1 water. Running out costs health.</p>
+        <table>
+          <tr><th>Item</th><th>Amount</th><th>Use</th></tr>
+          <tr><td>🥫 Food</td><td>${state.food}</td><td>Eaten automatically each night</td></tr>
+          <tr><td>💧 Water</td><td>${state.water}</td><td>Drunk automatically each night</td></tr>
+          <tr><td>🩹 Medicine</td><td>${state.medicine}</td><td><button data-heal="1" ${state.medicine < 1 || state.health >= 100 ? "disabled" : ""}>Use (+${heal} health)</button></td></tr>
+          <tr><td>🔫 Ammo</td><td>${state.ammo}</td><td>Used when you fight</td></tr>
+          <tr><td>🔩 Materials</td><td>${state.materials}</td><td>Used for crafting</td></tr>
+          <tr><td>🧱 Barricades</td><td>${state.barricades}</td><td>Protect your shelter at night</td></tr>
+        </table>`;
+    }
+
+    function renderCrafting() {
+      return `<p>Crafting doesn't use up the day.</p><div class="grid">${RECIPES.map((r) => `
+        <div class="card">
+          <h3 style="color:var(--text)">${r.name}</h3>
+          <p>${r.desc}</p>
+          <p>Cost: ${r.cost} materials</p>
+          <button data-craft="${r.id}" ${state.materials < r.cost ? "disabled" : ""}>Craft</button>
+        </div>`).join("")}</div>`;
+    }
+
+    function renderMissions() {
+      return `<p>Explore a territory for a chance to complete its mission. Each mission gives 50 XP.</p>
+        <table><tr><th>Territory</th><th>Mission</th><th>Status</th></tr>
+        ${TERRITORIES.map((t) => `<tr><td>${t.name}</td><td>${t.mission}</td>
+          <td>${state.missions.includes(t.id) ? '<span class="done">✔ Complete</span>' : "Open"}</td></tr>`).join("")}
+        </table>`;
+    }
+
+    function renderDatabase() {
+      return `<p>New entries unlock when you meet a zombie type for the first time.</p><div class="grid">${Object.entries(ZOMBIES).map(([id, z]) => {
+        const known = state.seen.includes(id);
+        return `<div class="card ${known ? "" : "locked"}">
+          <h3 style="color:var(--text)">${known ? z.name : "Unknown"}</h3>
+          <p>${known ? z.desc : "Not encountered yet."}</p>
+          ${known ? `<p><strong>Weakness:</strong> ${z.weakness}</p>` : ""}
+        </div>`;
+      }).join("")}</div>`;
+    }
+
+    function bindTabButtons() {
+      document.querySelectorAll("[data-explore]").forEach((b) => b.addEventListener("click", () => explore(b.dataset.explore)));
+      document.querySelectorAll("[data-rest]").forEach((b) => b.addEventListener("click", rest));
+      document.querySelectorAll("[data-heal]").forEach((b) => b.addEventListener("click", useMedicine));
+      document.querySelectorAll("[data-craft]").forEach((b) => b.addEventListener("click", () => craft(b.dataset.craft)));
+    }
+
+    function log(msg) {
+      const div = document.createElement("div");
+      div.textContent = msg;
+      $("log").prepend(div);
+    }
+
+    // ---------- Actions ----------
+    function useMedicine() {
+      if (state.medicine < 1) return;
+      const heal = state.skill === "Medic" ? 50 : 25;
+      state.medicine--;
+      state.health = Math.min(100, state.health + heal);
+      log(`You patch yourself up. +${heal} health.`);
+      render();
+    }
+
+    function craft(id) {
+      const r = RECIPES.find((x) => x.id === id);
+      if (state.materials < r.cost) return;
+      state.materials -= r.cost;
+      state[r.gives] += r.amount;
+      state.xp += 5;
+      log(`You craft a ${r.name.toLowerCase()}.`);
+      render();
+    }
+
+    function rest() {
+      state.health = Math.min(100, state.health + 20);
+      log("You rest in the shelter and recover 20 health.");
+      endDay();
+    }
+
+    function explore(id) {
+      const t = TERRITORIES.find((x) => x.id === id);
+      const found = [];
+      const mult = state.skill === "Scavenger" ? 1.5 : 1;
+      for (const [item, [min, max]] of Object.entries(t.loot)) {
+        const n = Math.round(rand(min, max) * mult);
+        if (n > 0) { state[item] += n; found.push(`${n} ${item}`); }
+      }
+      state.xp += 10;
+      log(`You search the ${t.name} and find ${found.length ? found.join(", ") : "nothing useful"}.`);
+
+      if (Math.random() < t.encounter) {
+        encounter(t, pick(t.zombies));
+      } else {
+        tryMission(t);
+        endDay();
+      }
+    }
+
+    function encounter(t, zid) {
+      const z = ZOMBIES[zid];
+      const first = !state.seen.includes(zid);
+      if (first) { state.seen.push(zid); log(`New Zombie Database entry: ${z.name}.`); }
+      state.busy = true;
+      showEvent(`${z.name} encounter`, `A ${z.name.toLowerCase()} lurches out of the shadows in the ${t.name}. ${z.desc}`, [
+        { label: `🔫 Fight (uses 1 ammo)`, disabled: state.ammo < 1, action: () => resolve(t, zid, "fight") },
+        { label: "🤫 Sneak past", action: () => resolve(t, zid, "sneak") },
+        { label: "🏃 Run", action: () => resolve(t, zid, "run") },
+      ]);
+      render();
+    }
+
+    function resolve(t, zid, choice) {
+      const z = ZOMBIES[zid];
+      let chance;
+      if (choice === "fight") {
+        state.ammo--;
+        chance = 0.75 - z.strength * 0.6 + (state.skill === "Fighter" ? 0.2 : 0);
+      } else if (choice === "sneak") {
+        chance = zid === "walker" || zid === "crawler" ? 0.75 : 0.5 - z.strength * 0.3;
+      } else {
+        chance = zid === "runner" ? 0.25 : 0.7 - z.strength * 0.4;
+      }
+      const success = Math.random() < Math.min(0.95, Math.max(0.1, chance));
+      let text;
+      if (success) {
+        const xp = choice === "fight" ? 25 : 10;
+        state.xp += xp;
+        text = choice === "fight" ? `You take down the ${z.name.toLowerCase()}. +${xp} XP.`
+             : choice === "sneak" ? `You slip past the ${z.name.toLowerCase()} unseen. +${xp} XP.`
+             : `You escape the ${z.name.toLowerCase()}. +${xp} XP.`;
+        log(text);
+        tryMission(t);
+      } else {
+        const dmg = rand(...z.damage);
+        state.health = Math.max(0, state.health - dmg);
+        text = `The ${z.name.toLowerCase()} gets to you. You lose ${dmg} health.`;
+        log(text);
+      }
+      state.busy = false;
+      showEvent(success ? "You made it" : "That hurt", text, [{ label: "Continue", action: () => { hideEvent(); endDay(); } }]);
+      render();
+      if (state.health <= 0) { hideEvent(); gameOver(false); }
+    }
+
+    function tryMission(t) {
+      if (state.missions.includes(t.id)) return;
+      const chance = t.danger === "low" ? 0.5 : t.danger === "medium" ? 0.4 : 0.35;
+      if (Math.random() < chance) {
+        state.missions.push(t.id);
+        state.xp += 50;
+        log(`🎯 Mission complete: ${t.mission}! +50 XP.`);
+      }
+    }
+
+    function endDay() {
+      if (state.health <= 0) return gameOver(false);
+      // Night: eat, drink
+      if (state.food > 0) state.food--; else { state.health -= 15; log("You go to bed hungry. -15 health."); }
+      if (state.water > 0) state.water--; else { state.health -= 15; log("You have no water. -15 health."); }
+      // Night attack
+      const attackChance = Math.max(0.05, 0.35 - state.barricades * 0.1);
+      if (Math.random() < attackChance) {
+        if (state.barricades > 0) {
+          state.barricades--;
+          log("Zombies attack the shelter in the night! A barricade holds them off, but it's destroyed.");
+        } else {
+          const dmg = rand(10, 20);
+          state.health -= dmg;
+          log(`Zombies break into the shelter in the night! You lose ${dmg} health.`);
+        }
+      }
+      state.health = Math.max(0, state.health);
+      if (state.health <= 0) { render(); return gameOver(false); }
+      if (state.day >= GOAL_DAYS) { render(); return gameOver(true); }
+      state.day++;
+      log(`Day ${state.day} begins.`);
+      render();
+    }
+
+    // ---------- Events ----------
+    function showEvent(title, text, choices) {
+      $("eventTitle").textContent = title;
+      $("eventText").textContent = text;
+      const box = $("eventChoices");
+      box.innerHTML = "";
+      choices.forEach((c) => {
+        const b = document.createElement("button");
+        b.textContent = c.label;
+        b.disabled = !!c.disabled;
+        b.addEventListener("click", c.action);
+        box.appendChild(b);
+      });
+      $("eventPanel").classList.remove("hidden");
+    }
+    function hideEvent() { $("eventPanel").classList.add("hidden"); }
+
+    // ---------- Game over & leaderboard ----------
+    function score() { return state.day * 100 + state.missions.length * 150 + state.xp; }
+
+    function gameOver(won) {
+      hideEvent();
+      $("game").classList.add("hidden");
+      $("over").classList.remove("hidden");
+      const s = score();
+      $("overTitle").textContent = won ? "🏕️ You survived!" : "💀 You didn't make it";
+      $("overText").textContent = won
+        ? `${state.name} reached the rebuilding camp after ${GOAL_DAYS} days, with ${state.missions.length} missions complete. Civilization has a chance. Score: ${s}.`
+        : `${state.name} fell on day ${state.day} after completing ${state.missions.length} missions. Score: ${s}.`;
+      saveScore({ name: state.name, skill: state.skill, days: state.day, won, score: s });
+      renderLeaderboard();
+    }
+
+    function loadScores() {
+      try { return JSON.parse(localStorage.getItem("zshq-leaderboard")) || []; } catch { return []; }
+    }
+    function saveScore(entry) {
+      const scores = [...loadScores(), entry].sort((a, b) => b.score - a.score).slice(0, 5);
+      try { localStorage.setItem("zshq-leaderboard", JSON.stringify(scores)); } catch { /* storage unavailable */ }
+    }
+    function renderLeaderboard() {
+      const scores = loadScores();
+      $("leaderboard").innerHTML = scores.length
+        ? `<table><tr><th>#</th><th>Survivor</th><th>Skill</th><th>Days</th><th>Result</th><th>Score</th></tr>
+           ${scores.map((s, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(s.name)}</td><td>${s.skill}</td><td>${s.days}</td>
+             <td>${s.won ? '<span class="done">Survived</span>' : "Fallen"}</td><td>${s.score}</td></tr>`).join("")}</table>`
+        : "<p>No survivors yet. Be the first!</p>";
+    }
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+
+    renderLeaderboard();
+  </script>
+</body>
+</html>

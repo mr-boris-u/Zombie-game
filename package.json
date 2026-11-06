@@ -1,0 +1,15 @@
+{
+  "name": "zombie-survival-hq",
+  "version": "1.0.0",
+  "description": "Zombie Survival HQ: an interactive survival game. Survive the apocalypse and rebuild civilization.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "game",
+    "zombie",
+    "survival"
+  ],
+  "license": "MIT"
+}
